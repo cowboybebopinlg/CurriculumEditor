@@ -1,4 +1,4 @@
-import { Curriculum, Module, Lesson, MediaFile } from '../types/curriculum'
+import { Curriculum } from '../types/curriculum'
 
 interface ContextPanelProps {
   isInEditMode: boolean

@@ -14,7 +14,7 @@ interface CurriculumTableProps {
 }
 
 export const CurriculumTable = ({ searchQuery }: CurriculumTableProps) => {
-  const [curricula, setCurricula] = useState<Curriculum[]>([
+  const [curricula] = useState<Curriculum[]>([
     { id: '1', name: 'Safety First', organization: 'Construction Inc.', author: 'John Doe', uploadDate: '2024-05-10', status: 'Published' },
     { id: '2', name: 'Advanced Welding', organization: 'Welders Union', author: 'Jane Smith', uploadDate: '2024-05-12', status: 'Draft' },
     { id: '3', name: 'Intro to Plumbing', organization: 'Plumbers Local', author: 'Mike Rowe', uploadDate: '2024-05-15', status: 'Published' },

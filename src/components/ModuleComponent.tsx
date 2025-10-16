@@ -29,7 +29,6 @@ interface ModuleItem {
 
 export const ModuleComponent = ({
   module,
-  moduleIndex,
   error,
   onUpdateModuleName,
   onToggleExpansion,

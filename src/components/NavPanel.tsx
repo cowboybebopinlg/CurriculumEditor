@@ -1,7 +1,5 @@
 import { NavIcon } from './NavIcon'
 import { NavTab } from './NavTab'
-import { CurriculumIcon } from './CurriculumIcon'
-import { HelpIcon } from './HelpIcon'
 
 export const NavPanel = () => {
   return (

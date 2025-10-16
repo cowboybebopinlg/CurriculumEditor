@@ -75,7 +75,7 @@ export const CurriculumBuilder = ({ curriculum, onCurriculumChanged, errors }: C
     }
   }
 
-  const handleImageUpload = (target: string) => {
+  const handleImageUpload = () => {
     fileInputRef.current?.click()
   }
 
@@ -236,7 +236,7 @@ export const CurriculumBuilder = ({ curriculum, onCurriculumChanged, errors }: C
         .map((item, index) => ({ ...item, orderNumber: updatedLessons.length + index + 1 }))
 
       module.lessons = updatedLessons.map(({ type, ...rest }) => rest)
-      module.mediaFiles = updatedMediaFiles.map(({ type, ...rest }) => rest)
+      module.mediaFiles = updatedMediaFiles.map((item) => ({ ...item, type: item.type as MediaFileType }))
 
       onCurriculumChanged(curriculum)
     }
@@ -289,7 +289,7 @@ export const CurriculumBuilder = ({ curriculum, onCurriculumChanged, errors }: C
                 <div className="flex items-start gap-6">
                   {/* Upload Area */}
                   <div
-                    onClick={() => handleImageUpload('curriculum')}
+                    onClick={() => handleImageUpload()}
                     onDragOver={handleDragOver}
                     onDragLeave={handleDragLeave}
                     onDrop={handleDrop}
@@ -303,7 +303,7 @@ export const CurriculumBuilder = ({ curriculum, onCurriculumChanged, errors }: C
                             <button
                               onClick={(e) => {
                                 e.stopPropagation()
-                                handleImageUpload('curriculum')
+                                handleImageUpload()
                               }}
                               className="bg-white hover:bg-gray-100 rounded-lg px-4 py-2 text-sm font-medium text-gray-900 transition-colors"
                             >
