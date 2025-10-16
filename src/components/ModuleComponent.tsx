@@ -252,7 +252,7 @@ export const ModuleComponent = ({
             ) : (
               <>
                 <DragDropContext onDragEnd={onDragEnd}>
-                  <Droppable droppableId="module-items">
+                  <Droppable droppableId={`module-items-${module.id}`}>
                     {(provided) => (
                       <div {...provided.droppableProps} ref={provided.innerRef}>
                         {allItems.map((item, index) => (

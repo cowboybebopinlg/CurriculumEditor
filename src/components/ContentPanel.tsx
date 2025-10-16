@@ -40,6 +40,7 @@ export const ContentPanel = ({
     <div className="basis-0 bg-[#ffffff] content-stretch flex flex-col grow h-screen items-start justify-start min-h-px min-w-px relative shrink-0" data-name="content-panel">
       <LessonsHeader
         isInEditMode={isInEditMode}
+        curriculum={curriculum}
         onCreateProcedureAI={onCreateProcedureAI}
         onCreateCurriculum={onCreateCurriculum}
         onSaveCurriculum={onSaveCurriculum}

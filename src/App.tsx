@@ -67,10 +67,13 @@ function App() {
   }
 
   const confirmDeleteCurriculum = () => {
-    console.log('Deleting curriculum...')
-    setIsInEditMode(false)
-    setCurriculum(null)
-    setIsDeleteModalOpen(false)
+    if (selectedCurriculumId) {
+      setCurricula(curricula.filter(c => c.id !== selectedCurriculumId))
+      setSelectedCurriculumId(null)
+      setCurriculum(null)
+      setIsInEditMode(false)
+      setIsDeleteModalOpen(false)
+    }
   }
 
   const handleCurriculumChanged = (newCurriculum: Curriculum) => {
@@ -79,6 +82,10 @@ function App() {
 
   const handleSelectCurriculum = (id: string) => {
     setSelectedCurriculumId(id)
+    const selected = curricula.find(c => c.id === id)
+    if (selected) {
+      setCurriculum(selected)
+    }
   }
 
   const handleOpenCurriculum = () => {
@@ -89,6 +96,12 @@ function App() {
         setIsInEditMode(true)
       }
     }
+  }
+
+  const handleCloseCurriculum = () => {
+    setCurriculum(null)
+    setSelectedCurriculumId(null)
+    setIsInEditMode(false)
   }
 
   return (
@@ -107,6 +120,7 @@ function App() {
         onCurriculumChanged={handleCurriculumChanged}
         onSelectCurriculum={handleSelectCurriculum}
         onOpenCurriculum={handleOpenCurriculum}
+        onCloseCurriculum={handleCloseCurriculum}
       />
       
       <CreateProcedureModal 

@@ -16,6 +16,7 @@ interface SystemBodyProps {
   onCurriculumChanged: (curriculum: Curriculum) => void
   onSelectCurriculum: (id: string) => void
   onOpenCurriculum: () => void
+  onCloseCurriculum: () => void
 }
 
 export const SystemBody = ({
@@ -30,7 +31,8 @@ export const SystemBody = ({
   onDeleteCurriculum,
   onCurriculumChanged,
   onSelectCurriculum,
-  onOpenCurriculum
+  onOpenCurriculum,
+  onCloseCurriculum
 }: SystemBodyProps) => {
   return (
     <div className="basis-0 content-stretch flex grow items-start justify-start min-h-px min-w-px relative shrink-0 w-full overflow-hidden" data-name="system-body">
@@ -52,6 +54,8 @@ export const SystemBody = ({
       <ContextPanel
         isInEditMode={isInEditMode}
         curriculum={curriculum}
+        onOpenCurriculum={onOpenCurriculum}
+        onCloseCurriculum={onCloseCurriculum}
       />
     </div>
   )
