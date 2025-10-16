@@ -21,12 +21,13 @@ function App() {
   }
 
   const handleCreateCurriculum = () => {
-    setIsInEditMode(true)
+    console.log('handleCreateCurriculum called. Setting isInEditMode to true.');
+    setIsInEditMode(true);
     setCurriculum({
       name: 'Untitled Curriculum',
       modules: []
-    })
-  }
+    });
+  };
 
   const handleSaveCurriculum = () => {
     console.log('Saving curriculum...', curriculum)
