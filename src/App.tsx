@@ -1,19 +1,23 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { SystemHeader } from './components/SystemHeader'
 import { SystemBody } from './components/SystemBody'
 import { CreateProcedureModal } from './components/CreateProcedureModal'
 import { Curriculum } from './types/curriculum'
 import { ConfirmationModal } from './components/ConfirmationModal'
+import curriculaData from './db.json'
 
 function App() {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
   const [isInEditMode, setIsInEditMode] = useState(false)
   const [errors, setErrors] = useState<{ curriculumName?: string; moduleNames?: { [moduleId: string]: string } }>({})
-  const [curriculum, setCurriculum] = useState<Curriculum>({
-    name: '',
-    modules: []
-  })
+  const [curriculum, setCurriculum] = useState<Curriculum | null>(null)
+  const [curricula, setCurricula] = useState<Curriculum[]>([])
+  const [selectedCurriculumId, setSelectedCurriculumId] = useState<string | null>(null)
+
+  useEffect(() => {
+    setCurricula(curriculaData)
+  }, [])
 
   const handleCreateProcedureAI = () => {
     setIsModalOpen(true)
@@ -27,12 +31,15 @@ function App() {
     console.log('handleCreateCurriculum called. Setting isInEditMode to true.');
     setIsInEditMode(true);
     setCurriculum({
+      id: '',
       name: 'Untitled Curriculum',
       modules: []
     });
   };
 
   const handleSaveCurriculum = () => {
+    if (!curriculum) return
+
     const errors: { curriculumName?: string; moduleNames?: { [moduleId: string]: string } } = {}
     if (!curriculum.name) {
       errors.curriculumName = 'Curriculum name is required.'
@@ -62,15 +69,26 @@ function App() {
   const confirmDeleteCurriculum = () => {
     console.log('Deleting curriculum...')
     setIsInEditMode(false)
-    setCurriculum({
-      name: '',
-      modules: []
-    })
+    setCurriculum(null)
     setIsDeleteModalOpen(false)
   }
 
   const handleCurriculumChanged = (newCurriculum: Curriculum) => {
     setCurriculum(newCurriculum)
+  }
+
+  const handleSelectCurriculum = (id: string) => {
+    setSelectedCurriculumId(id)
+  }
+
+  const handleOpenCurriculum = () => {
+    if (selectedCurriculumId) {
+      const selected = curricula.find(c => c.id === selectedCurriculumId)
+      if (selected) {
+        setCurriculum(selected)
+        setIsInEditMode(true)
+      }
+    }
   }
 
   return (
@@ -79,12 +97,16 @@ function App() {
       <SystemBody
         isInEditMode={isInEditMode}
         curriculum={curriculum}
+        curricula={curricula}
+        selectedCurriculumId={selectedCurriculumId}
         errors={errors}
         onCreateProcedureAI={handleCreateProcedureAI}
         onCreateCurriculum={handleCreateCurriculum}
         onSaveCurriculum={handleSaveCurriculum}
         onDeleteCurriculum={handleDeleteCurriculum}
         onCurriculumChanged={handleCurriculumChanged}
+        onSelectCurriculum={handleSelectCurriculum}
+        onOpenCurriculum={handleOpenCurriculum}
       />
       
       <CreateProcedureModal 

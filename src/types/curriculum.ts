@@ -30,6 +30,7 @@ export interface Module {
 }
 
 export interface Curriculum {
+  id: string;
   name: string;
   image?: string;
   modules: Module[];

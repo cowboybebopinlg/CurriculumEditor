@@ -49,8 +49,8 @@ export const CurriculumBuilder = ({ curriculum, onCurriculumChanged, errors }: C
     }
   }
 
-  const handleCurriculumNameChange = () => {
-    onCurriculumChanged(curriculum)
+  const handleCurriculumNameChange = (name: string) => {
+    onCurriculumChanged({ ...curriculum, name })
   }
 
   const handleDragOver = (e: React.DragEvent) => {
@@ -92,11 +92,13 @@ export const CurriculumBuilder = ({ curriculum, onCurriculumChanged, errors }: C
         if (!selectedModuleId) {
           onCurriculumChanged({ ...curriculum, image: reader.result as string })
         } else {
-          const module = curriculum.modules.find(m => m.id === selectedModuleId)
-          if (module) {
-            module.image = reader.result as string
-            onCurriculumChanged({ ...curriculum })
-          }
+          const newModules = curriculum.modules.map(m => {
+            if (m.id === selectedModuleId) {
+              return { ...m, image: reader.result as string }
+            }
+            return m
+          })
+          onCurriculumChanged({ ...curriculum, modules: newModules })
           setSelectedModuleId('')
         }
       }
@@ -105,16 +107,17 @@ export const CurriculumBuilder = ({ curriculum, onCurriculumChanged, errors }: C
   }
 
   const removeCurriculumImage = () => {
-    curriculum.image = undefined
-    onCurriculumChanged(curriculum)
+    onCurriculumChanged({ ...curriculum, image: undefined })
   }
 
   const removeModuleImage = (moduleId: string) => {
-    const module = curriculum.modules.find(m => m.id === moduleId)
-    if (module) {
-      module.image = undefined
-      onCurriculumChanged(curriculum)
-    }
+    const newModules = curriculum.modules.map(m => {
+      if (m.id === moduleId) {
+        return { ...m, image: undefined }
+      }
+      return m
+    })
+    onCurriculumChanged({ ...curriculum, modules: newModules })
   }
 
   const addModule = () => {
@@ -125,24 +128,27 @@ export const CurriculumBuilder = ({ curriculum, onCurriculumChanged, errors }: C
       lessons: [],
       mediaFiles: []
     }
-    curriculum.modules.push(newModule)
-    onCurriculumChanged(curriculum)
+    onCurriculumChanged({ ...curriculum, modules: [...curriculum.modules, newModule] })
   }
 
   const updateModuleName = (moduleId: string, name: string) => {
-    const module = curriculum.modules.find(m => m.id === moduleId)
-    if (module) {
-      module.name = name
-      onCurriculumChanged(curriculum)
-    }
+    const newModules = curriculum.modules.map(m => {
+      if (m.id === moduleId) {
+        return { ...m, name }
+      }
+      return m
+    })
+    onCurriculumChanged({ ...curriculum, modules: newModules })
   }
 
   const toggleModuleExpansion = (moduleId: string) => {
-    const module = curriculum.modules.find(m => m.id === moduleId)
-    if (module) {
-      module.isExpanded = !module.isExpanded
-      onCurriculumChanged(curriculum)
-    }
+    const newModules = curriculum.modules.map(m => {
+      if (m.id === moduleId) {
+        return { ...m, isExpanded: !m.isExpanded }
+      }
+      return m
+    })
+    onCurriculumChanged({ ...curriculum, modules: newModules })
   }
 
   const deleteModule = (moduleId: string) => {
@@ -152,8 +158,8 @@ export const CurriculumBuilder = ({ curriculum, onCurriculumChanged, errors }: C
 
   const handleDeleteModule = () => {
     if (moduleToDelete) {
-      curriculum.modules = curriculum.modules.filter(m => m.id !== moduleToDelete)
-      onCurriculumChanged(curriculum)
+      const newModules = curriculum.modules.filter(m => m.id !== moduleToDelete)
+      onCurriculumChanged({ ...curriculum, modules: newModules })
       setShowDeleteModuleModal(false)
       setModuleToDelete(null)
     }
@@ -172,74 +178,88 @@ export const CurriculumBuilder = ({ curriculum, onCurriculumChanged, errors }: C
 
   const addLesson = (lessonId: string) => {
     const availableLesson = availableLessons.find(l => l.id === lessonId)
-    const module = curriculum.modules.find(m => m.id === selectedModuleId)
-
-    if (availableLesson && module) {
-      const orderNumber = module.lessons.length + module.mediaFiles.length + 1
-      const newLesson: Lesson = {
-        id: crypto.randomUUID(),
-        name: availableLesson.name,
-        orderNumber
-      }
-      module.lessons.push(newLesson)
-      onCurriculumChanged(curriculum)
+    if (availableLesson && selectedModuleId) {
+      const newModules = curriculum.modules.map(m => {
+        if (m.id === selectedModuleId) {
+          const orderNumber = m.lessons.length + m.mediaFiles.length + 1
+          const newLesson: Lesson = {
+            id: crypto.randomUUID(),
+            name: availableLesson.name,
+            orderNumber
+          }
+          return { ...m, lessons: [...m.lessons, newLesson] }
+        }
+        return m
+      })
+      onCurriculumChanged({ ...curriculum, modules: newModules })
     }
     closeAddLessonModal()
   }
 
   const addMediaFile = (moduleId: string) => {
-    const module = curriculum.modules.find(m => m.id === moduleId)
-    if (module) {
-      const orderNumber = module.lessons.length + module.mediaFiles.length + 1
-      module.mediaFiles.push({
-        id: crypto.randomUUID(),
-        name: 'Sample Media File',
-        type: MediaFileType.Video,
-        orderNumber
-      })
-      onCurriculumChanged(curriculum)
-    }
+    const newModules = curriculum.modules.map(m => {
+      if (m.id === moduleId) {
+        const orderNumber = m.lessons.length + m.mediaFiles.length + 1
+        const newMediaFile = {
+          id: crypto.randomUUID(),
+          name: 'Sample Media File',
+          type: MediaFileType.Video,
+          orderNumber
+        }
+        return { ...m, mediaFiles: [...m.mediaFiles, newMediaFile] }
+      }
+      return m
+    })
+    onCurriculumChanged({ ...curriculum, modules: newModules })
   }
 
   const removeLesson = (moduleId: string, lessonId: string) => {
-    const module = curriculum.modules.find(m => m.id === moduleId)
-    if (module) {
-      module.lessons = module.lessons.filter(l => l.id !== lessonId)
-      onCurriculumChanged(curriculum)
-    }
+    const newModules = curriculum.modules.map(m => {
+      if (m.id === moduleId) {
+        return { ...m, lessons: m.lessons.filter(l => l.id !== lessonId) }
+      }
+      return m
+    })
+    onCurriculumChanged({ ...curriculum, modules: newModules })
   }
 
   const removeMediaFile = (moduleId: string, fileId: string) => {
-    const module = curriculum.modules.find(m => m.id === moduleId)
-    if (module) {
-      module.mediaFiles = module.mediaFiles.filter(f => f.id !== fileId)
-      onCurriculumChanged(curriculum)
-    }
+    const newModules = curriculum.modules.map(m => {
+      if (m.id === moduleId) {
+        return { ...m, mediaFiles: m.mediaFiles.filter(f => f.id !== fileId) }
+      }
+      return m
+    })
+    onCurriculumChanged({ ...curriculum, modules: newModules })
   }
 
   const reorderItems = (moduleId: string, fromIndex: number, toIndex: number) => {
-    const module = curriculum.modules.find(m => m.id === moduleId)
-    if (module) {
-      const allItems = [
-        ...module.lessons.map(l => ({ ...l, type: 'lesson' })),
-        ...module.mediaFiles.map(f => ({ ...f, type: 'media' }))
-      ].sort((a, b) => a.orderNumber - b.orderNumber)
+    const newModules = curriculum.modules.map(m => {
+      if (m.id === moduleId) {
+        const allItems = [
+          ...m.lessons.map(l => ({ ...l, type: 'lesson' })),
+          ...m.mediaFiles.map(f => ({ ...f, type: 'media' }))
+        ].sort((a, b) => a.orderNumber - b.orderNumber)
 
-      const [reorderedItem] = allItems.splice(fromIndex, 1)
-      allItems.splice(toIndex, 0, reorderedItem)
+        const [reorderedItem] = allItems.splice(fromIndex, 1)
+        allItems.splice(toIndex, 0, reorderedItem)
 
-      const updatedLessons = allItems
-        .filter(item => item.type === 'lesson')
-        .map((item, index) => ({ ...item, orderNumber: index + 1 }))
-      const updatedMediaFiles = allItems
-        .filter(item => item.type === 'media')
-        .map((item, index) => ({ ...item, orderNumber: updatedLessons.length + index + 1 }))
+        const updatedLessons = allItems
+          .filter(item => item.type === 'lesson')
+          .map((item, index) => ({ ...item, orderNumber: index + 1 }))
+        const updatedMediaFiles = allItems
+          .filter(item => item.type === 'media')
+          .map((item, index) => ({ ...item, orderNumber: updatedLessons.length + index + 1 }))
 
-      module.lessons = updatedLessons.map(({ type, ...rest }) => rest)
-      module.mediaFiles = updatedMediaFiles.map((item) => ({ ...item, type: item.type as MediaFileType }))
-
-      onCurriculumChanged(curriculum)
-    }
+        return {
+          ...m,
+          lessons: updatedLessons.map(({ type, ...rest }) => rest),
+          mediaFiles: updatedMediaFiles.map(item => ({ ...item, type: item.type as MediaFileType }))
+        }
+      }
+      return m
+    })
+    onCurriculumChanged({ ...curriculum, modules: newModules })
   }
 
   const onDragEnd = (result: DropResult) => {
@@ -271,10 +291,7 @@ export const CurriculumBuilder = ({ curriculum, onCurriculumChanged, errors }: C
                 </label>
                 <input
                   value={curriculum.name}
-                  onChange={(e) => {
-                    curriculum.name = e.target.value
-                    handleCurriculumNameChange()
-                  }}
+                  onChange={(e) => handleCurriculumNameChange(e.target.value)}
                   placeholder="Enter curriculum name"
                   className={`w-full px-3 py-2 border ${errors.curriculumName ? 'border-red-500' : 'border-gray-300'} rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
                 />

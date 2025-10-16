@@ -7,6 +7,8 @@ interface LessonsHeaderProps {
   onCreateCurriculum: () => void
   onSaveCurriculum: () => void
   onDeleteCurriculum: () => void
+  onOpenCurriculum: () => void
+  selectedCurriculumId: string | null
 }
 
 export const LessonsHeader = ({
@@ -14,7 +16,9 @@ export const LessonsHeader = ({
   onCreateProcedureAI,
   onCreateCurriculum,
   onSaveCurriculum,
-  onDeleteCurriculum
+  onDeleteCurriculum,
+  onOpenCurriculum,
+  selectedCurriculumId
 }: LessonsHeaderProps) => {
   return (
     <div className="bg-[#ffffff] sticky top-0 z-20 shrink-0 w-full" data-name="lessons-header">
@@ -28,6 +32,8 @@ export const LessonsHeader = ({
             onCreateCurriculum={onCreateCurriculum}
             onSaveCurriculum={onSaveCurriculum}
             onDeleteCurriculum={onDeleteCurriculum}
+            onOpenCurriculum={onOpenCurriculum}
+            selectedCurriculumId={selectedCurriculumId}
           />
         </div>
       </div>

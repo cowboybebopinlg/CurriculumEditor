@@ -1,25 +1,18 @@
-import { useState } from 'react'
-
-interface Curriculum {
-  id: string
-  name: string
-  organization: string
-  author: string
-  uploadDate: string
-  status: string
-}
+import { Curriculum } from '../types/curriculum'
 
 interface CurriculumTableProps {
   searchQuery: string
+  curricula: Curriculum[]
+  selectedCurriculumId: string | null
+  onSelectCurriculum: (id: string) => void
 }
 
-export const CurriculumTable = ({ searchQuery }: CurriculumTableProps) => {
-  const [curricula] = useState<Curriculum[]>([
-    { id: '1', name: 'Safety First', organization: 'Construction Inc.', author: 'John Doe', uploadDate: '2024-05-10', status: 'Published' },
-    { id: '2', name: 'Advanced Welding', organization: 'Welders Union', author: 'Jane Smith', uploadDate: '2024-05-12', status: 'Draft' },
-    { id: '3', name: 'Intro to Plumbing', organization: 'Plumbers Local', author: 'Mike Rowe', uploadDate: '2024-05-15', status: 'Published' },
-  ])
-
+export const CurriculumTable = ({
+  searchQuery,
+  curricula,
+  selectedCurriculumId,
+  onSelectCurriculum
+}: CurriculumTableProps) => {
   const filteredCurricula = curricula.filter(c =>
     c.name.toLowerCase().includes(searchQuery.toLowerCase())
   )
@@ -30,7 +23,13 @@ export const CurriculumTable = ({ searchQuery }: CurriculumTableProps) => {
         <div className="box-border content-stretch flex flex-col items-start justify-start p-[10px] relative w-full">
           <TableHeader />
           {filteredCurricula.map((curriculum, index) => (
-            <TableRow key={curriculum.id} curriculum={curriculum} isAlternate={index % 2 !== 0} />
+            <TableRow
+              key={curriculum.id}
+              curriculum={curriculum}
+              isAlternate={index % 2 !== 0}
+              isSelected={curriculum.id === selectedCurriculumId}
+              onSelect={() => onSelectCurriculum(curriculum.id)}
+            />
           ))}
         </div>
       </div>
@@ -86,13 +85,19 @@ const TableHeader = () => {
 interface TableRowProps {
   curriculum: Curriculum
   isAlternate?: boolean
+  isSelected: boolean
+  onSelect: () => void
 }
 
-const TableRow = ({ curriculum, isAlternate = false }: TableRowProps) => {
-  const bgClass = isAlternate ? 'bg-[#ffffff]' : 'bg-[#f5f9fe]'
+const TableRow = ({ curriculum, isAlternate = false, isSelected, onSelect }: TableRowProps) => {
+  const bgClass = isSelected ? 'bg-blue-200' : isAlternate ? 'bg-[#ffffff]' : 'bg-[#f5f9fe]'
 
   return (
-    <div className={`${bgClass} h-[45px] relative shrink-0 w-full`} data-name="table-row">
+    <div
+      className={`${bgClass} h-[45px] relative shrink-0 w-full cursor-pointer`}
+      data-name="table-row"
+      onClick={onSelect}
+    >
       <div aria-hidden="true" className="absolute border-[#bbbbbb] border-[0px_0px_1px] border-solid inset-0 pointer-events-none"></div>
       <div className="flex flex-row items-center relative size-full">
         <div className="box-border content-stretch flex h-[45px] items-center justify-between px-2.5 py-0 relative w-full">
