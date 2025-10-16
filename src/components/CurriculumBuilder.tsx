@@ -94,7 +94,26 @@ export const CurriculumBuilder = ({ curriculum, onCurriculumChanged, errors }: C
         } else {
           const newModules = curriculum.modules.map(m => {
             if (m.id === selectedModuleId) {
-              return { ...m, image: reader.result as string }
+              // Check if it's for the module image or a new media file
+              if (m.image === undefined) {
+                const orderNumber = m.lessons.length + m.mediaFiles.length + 1
+                const newMediaFile = {
+                  id: crypto.randomUUID(),
+                  name: file.name,
+                  type: file.type.startsWith('image')
+                    ? MediaFileType.Image
+                    : file.type.startsWith('video')
+                    ? MediaFileType.Video
+                    : file.type.startsWith('audio')
+                    ? MediaFileType.Audio
+                    : MediaFileType.Pdf,
+                  orderNumber,
+                  thumbnail: reader.result as string
+                }
+                return { ...m, mediaFiles: [...m.mediaFiles, newMediaFile] }
+              } else {
+                return { ...m, image: reader.result as string }
+              }
             }
             return m
           })
@@ -197,20 +216,8 @@ export const CurriculumBuilder = ({ curriculum, onCurriculumChanged, errors }: C
   }
 
   const addMediaFile = (moduleId: string) => {
-    const newModules = curriculum.modules.map(m => {
-      if (m.id === moduleId) {
-        const orderNumber = m.lessons.length + m.mediaFiles.length + 1
-        const newMediaFile = {
-          id: crypto.randomUUID(),
-          name: 'Sample Media File',
-          type: MediaFileType.Video,
-          orderNumber
-        }
-        return { ...m, mediaFiles: [...m.mediaFiles, newMediaFile] }
-      }
-      return m
-    })
-    onCurriculumChanged({ ...curriculum, modules: newModules })
+    setSelectedModuleId(moduleId)
+    fileInputRef.current?.click()
   }
 
   const removeLesson = (moduleId: string, lessonId: string) => {

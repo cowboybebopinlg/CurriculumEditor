@@ -3,6 +3,7 @@ import { LessonsHeaderButtons } from './LessonsHeaderButtons'
 
 interface LessonsHeaderProps {
   isInEditMode: boolean
+  curriculum: Curriculum | null
   onCreateProcedureAI: () => void
   onCreateCurriculum: () => void
   onSaveCurriculum: () => void
@@ -13,6 +14,7 @@ interface LessonsHeaderProps {
 
 export const LessonsHeader = ({
   isInEditMode,
+  curriculum,
   onCreateProcedureAI,
   onCreateCurriculum,
   onSaveCurriculum,
@@ -25,7 +27,7 @@ export const LessonsHeader = ({
       <div aria-hidden="true" className="absolute border-[#bbbbbb] border-[0px_0px_1px] border-solid inset-0 pointer-events-none"></div>
       <div className="flex flex-row items-center relative size-full">
         <div className="box-border content-stretch flex items-center justify-between p-[10px] relative w-full">
-          <HeaderTitle isInEditMode={isInEditMode} />
+          <HeaderTitle isInEditMode={isInEditMode} curriculum={curriculum} />
           <LessonsHeaderButtons
             isInEditMode={isInEditMode}
             onCreateProcedureAI={onCreateProcedureAI}

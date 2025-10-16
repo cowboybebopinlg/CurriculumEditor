@@ -30,10 +30,6 @@ export const LessonsHeaderButtons = ({
         </>
       ) : (
         <>
-          <OpenCurriculumButton
-            onClick={onOpenCurriculum}
-            disabled={!selectedCurriculumId}
-          />
           <CreateCurriculumButton onClick={onCreateCurriculum} />
         </>
       )}

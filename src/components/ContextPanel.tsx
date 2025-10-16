@@ -2,19 +2,21 @@ import { Curriculum } from '../types/curriculum'
 
 interface ContextPanelProps {
   isInEditMode: boolean
-  curriculum: Curriculum
+  curriculum: Curriculum | null
+  onOpenCurriculum: () => void
+  onCloseCurriculum: () => void
 }
 
-export const ContextPanel = ({ isInEditMode, curriculum }: ContextPanelProps) => {
+export const ContextPanel = ({ isInEditMode, curriculum, onOpenCurriculum, onCloseCurriculum }: ContextPanelProps) => {
   return (
     <div className="bg-[#ffffff] box-border content-stretch flex flex-col gap-5 h-screen sticky top-0 overflow-y-auto items-start justify-start p-[15px] relative shrink-0 w-[300px]" data-name="context-panel">
       <div aria-hidden="true" className="absolute border-[#bbbbbb] border-[0px_0px_0px_1px] border-solid inset-0 pointer-events-none"></div>
 
       {isInEditMode && curriculum ? (
-        <CurriculumOutliner curriculum={curriculum} />
+        <CurriculumOutliner curriculum={curriculum} onClose={onCloseCurriculum} />
       ) : (
         <>
-          <OpenButton />
+          <OpenButton onClick={onOpenCurriculum} />
           <DetailField title="Name" value={curriculum?.name || 'N/A'} />
           <DetailField title="Organization" value={curriculum?.organization || 'N/A'} />
           <DetailField title="Author" value={curriculum?.author || 'N/A'} />
@@ -26,7 +28,11 @@ export const ContextPanel = ({ isInEditMode, curriculum }: ContextPanelProps) =>
   )
 }
 
-const OpenButton = () => {
+interface OpenButtonProps {
+  onClick: () => void
+}
+
+const OpenButton = ({ onClick }: OpenButtonProps) => {
   return (
     <div className="content-stretch flex flex-col gap-[18px] items-center justify-start relative shrink-0 w-full" data-name="open-btn">
       {/* Large Icon */}
@@ -40,7 +46,11 @@ const OpenButton = () => {
       </div>
 
       {/* Button */}
-      <div className="bg-[#2d8ef3] box-border content-stretch flex gap-2.5 items-center justify-center px-0 py-2.5 relative rounded-md shrink-0 w-full cursor-pointer hover:bg-[#2563eb] transition-colors" data-name="open-btn">
+      <div
+        onClick={onClick}
+        className="bg-[#2d8ef3] box-border content-stretch flex gap-2.5 items-center justify-center px-0 py-2.5 relative rounded-md shrink-0 w-full cursor-pointer hover:bg-[#2563eb] transition-colors"
+        data-name="open-btn"
+      >
         <div className="font-['Inter:Semi_Bold',_sans-serif] font-semibold h-full leading-[0] not-italic relative shrink-0 text-[#ffffff] text-[14px] text-center w-full">
           <p className="leading-[normal]">Open</p>
         </div>
@@ -69,14 +79,23 @@ const DetailField = ({ title, value }: DetailFieldProps) => {
 
 interface CurriculumOutlinerProps {
   curriculum: Curriculum
+  onClose: () => void
 }
 
-const CurriculumOutliner = ({ curriculum }: CurriculumOutlinerProps) => {
+const CurriculumOutliner = ({ curriculum, onClose }: CurriculumOutlinerProps) => {
   return (
     <div className="h-full overflow-y-auto w-full">
-      <h3 className="font-['Inter:Semi_Bold',_sans-serif] font-semibold text-[#000000] text-[13px] mb-4">
-        Curriculum Outline
-      </h3>
+      <div className="flex justify-between items-center mb-4">
+        <h3 className="font-['Inter:Semi_Bold',_sans-serif] font-semibold text-[#000000] text-[13px]">
+          Curriculum Outline
+        </h3>
+        <button
+          onClick={onClose}
+          className="text-sm text-gray-600 hover:text-gray-900"
+        >
+          Close
+        </button>
+      </div>
 
       {curriculum.name ? (
         <div className="space-y-2">
