@@ -1,10 +1,13 @@
 import { useState, useRef } from 'react'
 import { Curriculum, Module, Lesson, MediaFileType } from '../types/curriculum'
 import { ModuleComponent } from './ModuleComponent'
+import { ConfirmationModal } from './ConfirmationModal'
+import { DragDropContext, Droppable, Draggable, DropResult } from 'react-beautiful-dnd'
 
 interface CurriculumBuilderProps {
   curriculum: Curriculum
   onCurriculumChanged: (curriculum: Curriculum) => void
+  errors: { curriculumName?: string; moduleNames?: { [moduleId: string]: string } }
 }
 
 interface AvailableLesson {
@@ -12,12 +15,14 @@ interface AvailableLesson {
   name: string
 }
 
-export const CurriculumBuilder = ({ curriculum, onCurriculumChanged }: CurriculumBuilderProps) => {
+export const CurriculumBuilder = ({ curriculum, onCurriculumChanged, errors }: CurriculumBuilderProps) => {
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [isFileDragging, setIsFileDragging] = useState(false)
   const [showAddLessonModal, setShowAddLessonModal] = useState(false)
   const [selectedModuleId, setSelectedModuleId] = useState('')
   const [lessonSearchQuery, setLessonSearchQuery] = useState('')
+  const [showDeleteModuleModal, setShowDeleteModuleModal] = useState(false)
+  const [moduleToDelete, setModuleToDelete] = useState<string | null>(null)
 
   // Mock lesson data
   const availableLessons: AvailableLesson[] = [
@@ -60,7 +65,14 @@ export const CurriculumBuilder = ({ curriculum, onCurriculumChanged }: Curriculu
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault()
     setIsFileDragging(false)
-    // File drop handling would go here
+    const file = e.dataTransfer.files?.[0]
+    if (file) {
+      const reader = new FileReader()
+      reader.onload = () => {
+        onCurriculumChanged({ ...curriculum, image: reader.result as string })
+      }
+      reader.readAsDataURL(file)
+    }
   }
 
   const handleImageUpload = (target: string) => {
@@ -72,23 +84,37 @@ export const CurriculumBuilder = ({ curriculum, onCurriculumChanged }: Curriculu
     fileInputRef.current?.click()
   }
 
-  const onFileSelected = () => {
-    // File selection handling - set placeholder image
-    if (!selectedModuleId) {
-      curriculum.image = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjQwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iNDAwIiBoZWlnaHQ9IjQwMCIgZmlsbD0iIzJkOGVmMyIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LXNpemU9IjE2IiBmaWxsPSJ3aGl0ZSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkN1cnJpY3VsdW0gSW1hZ2U8L3RleHQ+PC9zdmc+';
-    } else {
-      const module = curriculum.modules.find(m => m.id === selectedModuleId)
-      if (module) {
-        module.image = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjE0MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iNDAwIiBoZWlnaHQ9IjE0MCIgZmlsbD0iIzJkOGVmMyIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LXNpemU9IjE2IiBmaWxsPSJ3aGl0ZSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPk1vZHVsZSBJbWFnZTwvdGV4dD48L3N2Zz4=';
+  const onFileSelected = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (file) {
+      const reader = new FileReader()
+      reader.onload = () => {
+        if (!selectedModuleId) {
+          onCurriculumChanged({ ...curriculum, image: reader.result as string })
+        } else {
+          const module = curriculum.modules.find(m => m.id === selectedModuleId)
+          if (module) {
+            module.image = reader.result as string
+            onCurriculumChanged({ ...curriculum })
+          }
+          setSelectedModuleId('')
+        }
       }
-      setSelectedModuleId('');
+      reader.readAsDataURL(file)
     }
-    onCurriculumChanged(curriculum);
   }
 
   const removeCurriculumImage = () => {
     curriculum.image = undefined
     onCurriculumChanged(curriculum)
+  }
+
+  const removeModuleImage = (moduleId: string) => {
+    const module = curriculum.modules.find(m => m.id === moduleId)
+    if (module) {
+      module.image = undefined
+      onCurriculumChanged(curriculum)
+    }
   }
 
   const addModule = () => {
@@ -120,8 +146,17 @@ export const CurriculumBuilder = ({ curriculum, onCurriculumChanged }: Curriculu
   }
 
   const deleteModule = (moduleId: string) => {
-    curriculum.modules = curriculum.modules.filter(m => m.id !== moduleId)
-    onCurriculumChanged(curriculum)
+    setModuleToDelete(moduleId)
+    setShowDeleteModuleModal(true)
+  }
+
+  const handleDeleteModule = () => {
+    if (moduleToDelete) {
+      curriculum.modules = curriculum.modules.filter(m => m.id !== moduleToDelete)
+      onCurriculumChanged(curriculum)
+      setShowDeleteModuleModal(false)
+      setModuleToDelete(null)
+    }
   }
 
   const openAddLessonModal = (moduleId: string) => {
@@ -183,8 +218,39 @@ export const CurriculumBuilder = ({ curriculum, onCurriculumChanged }: Curriculu
   }
 
   const reorderItems = (moduleId: string, fromIndex: number, toIndex: number) => {
-    // Reordering logic would go here
-    onCurriculumChanged(curriculum)
+    const module = curriculum.modules.find(m => m.id === moduleId)
+    if (module) {
+      const allItems = [
+        ...module.lessons.map(l => ({ ...l, type: 'lesson' })),
+        ...module.mediaFiles.map(f => ({ ...f, type: 'media' }))
+      ].sort((a, b) => a.orderNumber - b.orderNumber)
+
+      const [reorderedItem] = allItems.splice(fromIndex, 1)
+      allItems.splice(toIndex, 0, reorderedItem)
+
+      const updatedLessons = allItems
+        .filter(item => item.type === 'lesson')
+        .map((item, index) => ({ ...item, orderNumber: index + 1 }))
+      const updatedMediaFiles = allItems
+        .filter(item => item.type === 'media')
+        .map((item, index) => ({ ...item, orderNumber: updatedLessons.length + index + 1 }))
+
+      module.lessons = updatedLessons.map(({ type, ...rest }) => rest)
+      module.mediaFiles = updatedMediaFiles.map(({ type, ...rest }) => rest)
+
+      onCurriculumChanged(curriculum)
+    }
+  }
+
+  const onDragEnd = (result: DropResult) => {
+    const { source, destination } = result
+    if (!destination) return
+
+    const items = Array.from(curriculum.modules)
+    const [reorderedItem] = items.splice(source.index, 1)
+    items.splice(destination.index, 0, reorderedItem)
+
+    onCurriculumChanged({ ...curriculum, modules: items })
   }
 
   return (
@@ -210,8 +276,9 @@ export const CurriculumBuilder = ({ curriculum, onCurriculumChanged }: Curriculu
                     handleCurriculumNameChange()
                   }}
                   placeholder="Enter curriculum name"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className={`w-full px-3 py-2 border ${errors.curriculumName ? 'border-red-500' : 'border-gray-300'} rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
                 />
+                {errors.curriculumName && <p className="text-red-500 text-sm mt-1">{errors.curriculumName}</p>}
               </div>
 
               {/* Curriculum Image Upload */}
@@ -306,23 +373,42 @@ export const CurriculumBuilder = ({ curriculum, onCurriculumChanged }: Curriculu
               <h3 className="text-lg font-semibold text-gray-900">
                 Modules
               </h3>
-
-              {curriculum.modules.map((module, index) => (
-                <ModuleComponent
-                  key={module.id}
-                  module={module}
-                  moduleIndex={index}
-                  onUpdateModuleName={updateModuleName}
-                  onToggleExpansion={toggleModuleExpansion}
-                  onDeleteModule={deleteModule}
-                  onImageUpload={handleModuleImageUpload}
-                  onAddLesson={openAddLessonModal}
-                  onAddMediaFile={addMediaFile}
-                  onRemoveLesson={removeLesson}
-                  onRemoveMediaFile={removeMediaFile}
-                  onReorderItems={reorderItems}
-                />
-              ))}
+              <DragDropContext onDragEnd={onDragEnd}>
+                <Droppable droppableId="modules">
+                  {(provided) => (
+                    <div {...provided.droppableProps} ref={provided.innerRef}>
+                      {curriculum.modules.map((module, index) => (
+                        <Draggable key={module.id} draggableId={module.id} index={index}>
+                          {(provided) => (
+                            <div
+                              ref={provided.innerRef}
+                              {...provided.draggableProps}
+                              {...provided.dragHandleProps}
+                            >
+                              <ModuleComponent
+                                module={module}
+                                moduleIndex={index}
+                                error={errors.moduleNames?.[module.id]}
+                                onUpdateModuleName={updateModuleName}
+                                onToggleExpansion={toggleModuleExpansion}
+                                onDeleteModule={deleteModule}
+                                onImageUpload={handleModuleImageUpload}
+                                onRemoveModuleImage={removeModuleImage}
+                                onAddLesson={openAddLessonModal}
+                                onAddMediaFile={addMediaFile}
+                                onRemoveLesson={removeLesson}
+                                onRemoveMediaFile={removeMediaFile}
+                                onReorderItems={reorderItems}
+                              />
+                            </div>
+                          )}
+                        </Draggable>
+                      ))}
+                      {provided.placeholder}
+                    </div>
+                  )}
+                </Droppable>
+              </DragDropContext>
 
               {/* Add Module Button */}
               <div className="w-full border-2 border-dashed border-blue-200 rounded-lg bg-blue-50/30 p-8 text-center hover:border-blue-300 hover:bg-blue-50/50 transition-colors">
@@ -356,6 +442,15 @@ export const CurriculumBuilder = ({ curriculum, onCurriculumChanged }: Curriculu
         accept="image/*"
         style={{ display: 'none' }}
         onChange={onFileSelected}
+      />
+
+      {/* Delete Module Modal */}
+      <ConfirmationModal
+        isOpen={showDeleteModuleModal}
+        onClose={() => setShowDeleteModuleModal(false)}
+        onConfirm={handleDeleteModule}
+        title="Delete Module"
+        message="Are you sure you want to delete this module? This action cannot be undone."
       />
 
       {/* Add Lesson Modal */}

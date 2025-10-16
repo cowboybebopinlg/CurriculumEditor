@@ -3,10 +3,13 @@ import { SystemHeader } from './components/SystemHeader'
 import { SystemBody } from './components/SystemBody'
 import { CreateProcedureModal } from './components/CreateProcedureModal'
 import { Curriculum } from './types/curriculum'
+import { ConfirmationModal } from './components/ConfirmationModal'
 
 function App() {
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
   const [isInEditMode, setIsInEditMode] = useState(false)
+  const [errors, setErrors] = useState<{ curriculumName?: string; moduleNames?: { [moduleId: string]: string } }>({})
   const [curriculum, setCurriculum] = useState<Curriculum>({
     name: '',
     modules: []
@@ -30,17 +33,40 @@ function App() {
   };
 
   const handleSaveCurriculum = () => {
+    const errors: { curriculumName?: string; moduleNames?: { [moduleId: string]: string } } = {}
+    if (!curriculum.name) {
+      errors.curriculumName = 'Curriculum name is required.'
+    }
+    curriculum.modules.forEach(module => {
+      if (!module.name) {
+        if (!errors.moduleNames) {
+          errors.moduleNames = {}
+        }
+        errors.moduleNames[module.id] = 'Module name is required.'
+      }
+    })
+
+    setErrors(errors)
+    if (Object.keys(errors).length > 0) {
+      return
+    }
+
     console.log('Saving curriculum...', curriculum)
     // Add save logic here
   }
 
   const handleDeleteCurriculum = () => {
+    setIsDeleteModalOpen(true)
+  }
+
+  const confirmDeleteCurriculum = () => {
     console.log('Deleting curriculum...')
     setIsInEditMode(false)
     setCurriculum({
       name: '',
       modules: []
     })
+    setIsDeleteModalOpen(false)
   }
 
   const handleCurriculumChanged = (newCurriculum: Curriculum) => {
@@ -53,6 +79,7 @@ function App() {
       <SystemBody
         isInEditMode={isInEditMode}
         curriculum={curriculum}
+        errors={errors}
         onCreateProcedureAI={handleCreateProcedureAI}
         onCreateCurriculum={handleCreateCurriculum}
         onSaveCurriculum={handleSaveCurriculum}
@@ -63,6 +90,13 @@ function App() {
       <CreateProcedureModal 
         isOpen={isModalOpen} 
         onClose={handleCloseModal} 
+      />
+      <ConfirmationModal
+        isOpen={isDeleteModalOpen}
+        onClose={() => setIsDeleteModalOpen(false)}
+        onConfirm={confirmDeleteCurriculum}
+        title="Delete Curriculum"
+        message="Are you sure you want to delete this curriculum? This action cannot be undone."
       />
     </div>
   )

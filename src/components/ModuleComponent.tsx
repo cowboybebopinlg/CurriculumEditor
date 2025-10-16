@@ -1,13 +1,16 @@
 import { useState } from 'react'
 import { Module, MediaFileType } from '../types/curriculum'
+import { DragDropContext, Droppable, Draggable, DropResult } from 'react-beautiful-dnd'
 
 interface ModuleComponentProps {
   module: Module
   moduleIndex: number
+  error?: string
   onUpdateModuleName: (moduleId: string, name: string) => void
   onToggleExpansion: (moduleId: string) => void
   onDeleteModule: (moduleId: string) => void
   onImageUpload: (moduleId: string) => void
+  onRemoveModuleImage: (moduleId: string) => void
   onAddLesson: (moduleId: string) => void
   onAddMediaFile: (moduleId: string) => void
   onRemoveLesson: (moduleId: string, lessonId: string) => void
@@ -27,10 +30,12 @@ interface ModuleItem {
 export const ModuleComponent = ({
   module,
   moduleIndex,
+  error,
   onUpdateModuleName,
   onToggleExpansion,
   onDeleteModule,
   onImageUpload,
+  onRemoveModuleImage,
   onAddLesson,
   onAddMediaFile,
   onRemoveLesson,
@@ -76,8 +81,19 @@ export const ModuleComponent = ({
     }
   }
 
+  const onDragEnd = (result: DropResult) => {
+    const { source, destination } = result
+    if (!destination) return
+
+    const items = Array.from(allItems)
+    const [reorderedItem] = items.splice(source.index, 1)
+    items.splice(destination.index, 0, reorderedItem)
+
+    onReorderItems(module.id, source.index, destination.index)
+  }
+
   const removeModuleImage = () => {
-    // Module image removal would be handled here
+    onRemoveModuleImage(module.id)
   }
 
   const getMediaIcon = (mediaType?: MediaFileType) => {
@@ -175,8 +191,9 @@ export const ModuleComponent = ({
                 value={module.name}
                 onChange={(e) => onUpdateModuleName(module.id, e.target.value)}
                 placeholder="Module Name (required)"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className={`w-full px-3 py-2 border ${error ? 'border-red-500' : 'border-gray-300'} rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
               />
+              {error && <p className="text-red-500 text-sm mt-1">{error}</p>}
             </div>
 
             <button
@@ -235,56 +252,72 @@ export const ModuleComponent = ({
               </div>
             ) : (
               <>
-                <div className="space-y-3">
-                  {allItems.map((item) => (
-                    <div key={item.id} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg group cursor-default">
-                      <div className="relative">
-                        <div className="w-12 h-12 bg-white rounded border border-gray-200 flex items-center justify-center overflow-hidden">
-                          {item.type === 'lesson' ? (
-                            item.thumbnail ? (
-                              <img src={item.thumbnail} alt="" className="w-full h-full object-cover" />
-                            ) : (
-                              <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
-                              </svg>
-                            )
-                          ) : (
-                            getMediaIcon(item.mediaType)
-                          )}
-                        </div>
-                        <div className="absolute -top-1 -left-1 w-5 h-5 bg-blue-600 text-white rounded-full flex items-center justify-center text-xs font-medium">
-                          {item.orderNumber}
-                        </div>
-                      </div>
+                <DragDropContext onDragEnd={onDragEnd}>
+                  <Droppable droppableId="module-items">
+                    {(provided) => (
+                      <div {...provided.droppableProps} ref={provided.innerRef}>
+                        {allItems.map((item, index) => (
+                          <Draggable key={item.id} draggableId={item.id} index={index}>
+                            {(provided) => (
+                              <div
+                                ref={provided.innerRef}
+                                {...provided.draggableProps}
+                                {...provided.dragHandleProps}
+                                className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg group cursor-default mb-3"
+                              >
+                                <div className="relative">
+                                  <div className="w-12 h-12 bg-white rounded border border-gray-200 flex items-center justify-center overflow-hidden">
+                                    {item.type === 'lesson' ? (
+                                      item.thumbnail ? (
+                                        <img src={item.thumbnail} alt="" className="w-full h-full object-cover" />
+                                      ) : (
+                                        <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+                                        </svg>
+                                      )
+                                    ) : (
+                                      getMediaIcon(item.mediaType)
+                                    )}
+                                  </div>
+                                  <div className="absolute -top-1 -left-1 w-5 h-5 bg-blue-600 text-white rounded-full flex items-center justify-center text-xs font-medium">
+                                    {item.orderNumber}
+                                  </div>
+                                </div>
 
-                      <div className="flex-1">
-                        <p className="font-medium text-gray-900">{item.name}</p>
-                        <p className="text-sm text-gray-600">
-                          {item.type === 'lesson' ? 'Lesson' : `${item.mediaType?.toUpperCase()} File`}
-                        </p>
-                      </div>
+                                <div className="flex-1">
+                                  <p className="font-medium text-gray-900">{item.name}</p>
+                                  <p className="text-sm text-gray-600">
+                                    {item.type === 'lesson' ? 'Lesson' : `${item.mediaType?.toUpperCase()} File`}
+                                  </p>
+                                </div>
 
-                      <div className="flex items-center gap-1">
-                        <button
-                          className="p-1 text-gray-400 hover:text-gray-600 opacity-0 group-hover:opacity-100 transition-opacity cursor-grab active:cursor-grabbing"
-                          title="Drag to reorder"
-                        >
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 9l4-4 4 4m0 6l-4 4-4-4"></path>
-                          </svg>
-                        </button>
-                        <button
-                          onClick={() => removeItem(item)}
-                          className="p-1 text-gray-400 hover:text-red-600 opacity-0 group-hover:opacity-100 transition-opacity"
-                        >
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-                          </svg>
-                        </button>
+                                <div className="flex items-center gap-1">
+                                  <button
+                                    className="p-1 text-gray-400 hover:text-gray-600 opacity-0 group-hover:opacity-100 transition-opacity cursor-grab active:cursor-grabbing"
+                                    title="Drag to reorder"
+                                  >
+                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 9l4-4 4 4m0 6l-4 4-4-4"></path>
+                                    </svg>
+                                  </button>
+                                  <button
+                                    onClick={() => removeItem(item)}
+                                    className="p-1 text-gray-400 hover:text-red-600 opacity-0 group-hover:opacity-100 transition-opacity"
+                                  >
+                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                    </svg>
+                                  </button>
+                                </div>
+                              </div>
+                            )}
+                          </Draggable>
+                        ))}
+                        {provided.placeholder}
                       </div>
-                    </div>
-                  ))}
-                </div>
+                    )}
+                  </Droppable>
+                </DragDropContext>
 
                 {/* Module Toolbar */}
                 <div className="flex gap-2 mt-4 pt-4 border-t border-gray-100">

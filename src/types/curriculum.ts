@@ -33,6 +33,10 @@ export interface Curriculum {
   name: string;
   image?: string;
   modules: Module[];
+  organization?: string;
+  author?: string;
+  uploadDate?: string;
+  status?: string;
 }
 
 export interface CurriculumListItem {
