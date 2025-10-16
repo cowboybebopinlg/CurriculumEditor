@@ -6,6 +6,7 @@ import { Curriculum } from '../types/curriculum'
 interface SystemBodyProps {
   isInEditMode: boolean
   curriculum: Curriculum
+  errors: { curriculumName?: string; moduleNames?: { [moduleId: string]: string } }
   onCreateProcedureAI: () => void
   onCreateCurriculum: () => void
   onSaveCurriculum: () => void
@@ -16,6 +17,7 @@ interface SystemBodyProps {
 export const SystemBody = ({
   isInEditMode,
   curriculum,
+  errors,
   onCreateProcedureAI,
   onCreateCurriculum,
   onSaveCurriculum,
@@ -28,6 +30,7 @@ export const SystemBody = ({
       <ContentPanel
         isInEditMode={isInEditMode}
         curriculum={curriculum}
+        errors={errors}
         onCreateProcedureAI={onCreateProcedureAI}
         onCreateCurriculum={onCreateCurriculum}
         onSaveCurriculum={onSaveCurriculum}

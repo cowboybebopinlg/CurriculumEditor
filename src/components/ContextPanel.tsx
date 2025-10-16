@@ -15,11 +15,11 @@ export const ContextPanel = ({ isInEditMode, curriculum }: ContextPanelProps) =>
       ) : (
         <>
           <OpenButton />
-          <DetailField title="Name" value="Lorem Ipsum" />
-          <DetailField title="Organization" value="Lorem Ipsum" />
-          <DetailField title="Author" value="Brian Brigsby" />
-          <DetailField title="Upload Date" value="4/25/2024; 4:46PM" />
-          <DetailField title="Status" value="Published" />
+          <DetailField title="Name" value={curriculum?.name || 'N/A'} />
+          <DetailField title="Organization" value={curriculum?.organization || 'N/A'} />
+          <DetailField title="Author" value={curriculum?.author || 'N/A'} />
+          <DetailField title="Upload Date" value={curriculum?.uploadDate || 'N/A'} />
+          <DetailField title="Status" value={curriculum?.status || 'N/A'} />
         </>
       )}
     </div>
