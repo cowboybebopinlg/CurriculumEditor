@@ -5,24 +5,32 @@ import { Curriculum } from '../types/curriculum'
 
 interface SystemBodyProps {
   isInEditMode: boolean
-  curriculum: Curriculum
+  curriculum: Curriculum | null
+  curricula: Curriculum[]
+  selectedCurriculumId: string | null
   errors: { curriculumName?: string; moduleNames?: { [moduleId: string]: string } }
   onCreateProcedureAI: () => void
   onCreateCurriculum: () => void
   onSaveCurriculum: () => void
   onDeleteCurriculum: () => void
   onCurriculumChanged: (curriculum: Curriculum) => void
+  onSelectCurriculum: (id: string) => void
+  onOpenCurriculum: () => void
 }
 
 export const SystemBody = ({
   isInEditMode,
   curriculum,
+  curricula,
+  selectedCurriculumId,
   errors,
   onCreateProcedureAI,
   onCreateCurriculum,
   onSaveCurriculum,
   onDeleteCurriculum,
-  onCurriculumChanged
+  onCurriculumChanged,
+  onSelectCurriculum,
+  onOpenCurriculum
 }: SystemBodyProps) => {
   return (
     <div className="basis-0 content-stretch flex grow items-start justify-start min-h-px min-w-px relative shrink-0 w-full overflow-hidden" data-name="system-body">
@@ -30,12 +38,16 @@ export const SystemBody = ({
       <ContentPanel
         isInEditMode={isInEditMode}
         curriculum={curriculum}
+        curricula={curricula}
+        selectedCurriculumId={selectedCurriculumId}
         errors={errors}
         onCreateProcedureAI={onCreateProcedureAI}
         onCreateCurriculum={onCreateCurriculum}
         onSaveCurriculum={onSaveCurriculum}
         onDeleteCurriculum={onDeleteCurriculum}
         onCurriculumChanged={onCurriculumChanged}
+        onSelectCurriculum={onSelectCurriculum}
+        onOpenCurriculum={onOpenCurriculum}
       />
       <ContextPanel
         isInEditMode={isInEditMode}

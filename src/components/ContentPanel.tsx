@@ -7,24 +7,32 @@ import { Curriculum } from '../types/curriculum'
 
 interface ContentPanelProps {
   isInEditMode: boolean
-  curriculum: Curriculum
+  curriculum: Curriculum | null
+  curricula: Curriculum[]
+  selectedCurriculumId: string | null
   errors: { curriculumName?: string; moduleNames?: { [moduleId: string]: string } }
   onCreateProcedureAI: () => void
   onCreateCurriculum: () => void
   onSaveCurriculum: () => void
   onDeleteCurriculum: () => void
   onCurriculumChanged: (curriculum: Curriculum) => void
+  onSelectCurriculum: (id: string) => void
+  onOpenCurriculum: () => void
 }
 
 export const ContentPanel = ({
   isInEditMode,
   curriculum,
+  curricula,
+  selectedCurriculumId,
   errors,
   onCreateProcedureAI,
   onCreateCurriculum,
   onSaveCurriculum,
   onDeleteCurriculum,
-  onCurriculumChanged
+  onCurriculumChanged,
+  onSelectCurriculum,
+  onOpenCurriculum
 }: ContentPanelProps) => {
   const [searchQuery, setSearchQuery] = useState('')
 
@@ -36,20 +44,27 @@ export const ContentPanel = ({
         onCreateCurriculum={onCreateCurriculum}
         onSaveCurriculum={onSaveCurriculum}
         onDeleteCurriculum={onDeleteCurriculum}
+        onOpenCurriculum={onOpenCurriculum}
+        selectedCurriculumId={selectedCurriculumId}
       />
 
       {!isInEditMode ? (
         <>
           <SearchBar onSearch={setSearchQuery} />
-          <CurriculumTable searchQuery={searchQuery} />
+          <CurriculumTable
+            searchQuery={searchQuery}
+            curricula={curricula}
+            selectedCurriculumId={selectedCurriculumId}
+            onSelectCurriculum={onSelectCurriculum}
+          />
         </>
-      ) : (
+      ) : curriculum ? (
         <CurriculumBuilder
           curriculum={curriculum}
           onCurriculumChanged={onCurriculumChanged}
           errors={errors}
         />
-      )}
+      ) : null}
     </div>
   )
 }
